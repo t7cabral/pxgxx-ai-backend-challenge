@@ -1,0 +1,42 @@
+version: '3.5'
+
+services:
+  # DATABASE
+  mysql:
+    container_name: MySQL
+    platform: linux/x86_64
+    image: mysql:$DB_VERSION
+    volumes:
+      - "./mysql/:/var/lib/mysql"
+    env_file:
+      - .env
+    command: --ignore-db-dir=lost+found --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - $DB_PORT:$DB_PORT
+    environment:
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=$DB_PASSWORD
+      #- MYSQL_USER=$DB_USER
+      - MYSQL_PASSWORD=$DB_PASSWORD
+    networks:
+      - challenge
+
+  # API
+  api:
+    build:
+      context: api/.
+    container_name: API
+    restart: always
+    environment:
+      WAIT_HOSTS: mysql:3306
+    env_file:
+      - .env
+    ports:
+      - $API_PORT:3000
+    networks:
+      - challenge
+
+networks:
+  challenge:
+    driver: 'bridge'
